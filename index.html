@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>핑크 파스텔 실시간 방명록 🌸</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pink: {
+                            50: '#fff5f7',
+                            100: '#ffe3ec',
+                            200: '#ffccd9',
+                            300: '#ffb3c6',
+                            400: '#ff85a2',
+                            500: '#ff5c8a',
+                            600: '#e03a6c',
+                            700: '#b82350',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans KR', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Noto Sans KR', 'Inter', sans-serif;
+            background: linear-gradient(135deg, #fff5f7 0%, #ffe3ec 50%, #ffccd9 100%);
+            min-height: 100vh;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #fff5f7;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #ffb3c6;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff85a2;
+        }
+
+        /* Glassmorphism card effect */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .heart-btn:active {
+            transform: scale(1.3);
+        }
+    </style>
+</head>
+
+<body class="text-gray-800 pb-16">
+
+    <!-- Header -->
+    <header class="w-full py-8 text-center px-4">
+        <div
+            class="inline-flex items-center justify-center p-3 bg-pink-100 rounded-full mb-3 shadow-inner text-pink-500">
+            <i class="fa-solid fa-heart text-2xl animate-pulse"></i>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-pink-700 tracking-tight">
+            Sweet Guestbook ✨
+        </h1>
+        <p class="text-pink-500 mt-2 text-sm sm:text-base font-medium">
+            소중한 방문 소감과 메시지를 남겨주세요! 실시간으로 공유됩니다.
+        </p>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-4xl mx-auto px-4 grid grid-cols-1 md:grid-cols-12 gap-8">
+
+        <!-- Guestbook Input Form (Left Column / Top on mobile) -->
+        <section class="md:col-span-5">
+            <div class="glass-card rounded-3xl p-6 shadow-xl sticky top-6 border border-pink-100">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fa-regular fa-pen-to-square text-pink-500"></i>
+                    방명록 작성하기
+                </h2>
+
+                <form id="guestbookForm" class="space-y-4">
+                    <div>
+                        <label for="name"
+                            class="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wider">
+                            작성자 이름 / 닉네임
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-pink-400">
+                                <i class="fa-regular fa-user"></i>
+                            </span>
+                            <input type="text" id="name" required maxlength="20" placeholder="예: 핑크러버"
+                                class="w-full pl-9 pr-4 py-2.5 bg-white/70 border border-pink-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent transition text-sm text-gray-700 placeholder-gray-400">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="message"
+                            class="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wider">
+                            남길 메시지
+                        </label>
+                        <div class="relative">
+                            <textarea id="message" required rows="4" maxlength="300" placeholder="따뜻한 한 마디를 적어주세요 💕"
+                                class="w-full p-3 bg-white/70 border border-pink-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent transition text-sm text-gray-700 placeholder-gray-400 resize-none"></textarea>
+                        </div>
+                        <div class="text-right text-xs text-gray-400 mt-1">
+                            <span id="charCount">0</span>/300
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submitBtn"
+                        class="w-full py-3 bg-gradient-to-r from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center gap-2 group">
+                        <span>방명록 남기기</span>
+                        <i class="fa-solid fa-paper-plane group-hover:translate-x-1 transition-transform"></i>
+                    </button>
+                </form>
+
+                <!-- System Notice -->
+                <div
+                    class="mt-4 p-3 bg-pink-50 rounded-xl border border-pink-100 text-xs text-pink-600 flex items-start gap-2">
+                    <i class="fa-solid fa-circle-info mt-0.5 text-pink-400"></i>
+                    <span>등록된 방명록은 모든 사용자에게 실시간으로 반영되며 안전하게 저장됩니다.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Guestbook Messages List (Right Column / Bottom on mobile) -->
+        <section class="md:col-span-7 space-y-4">
+            <div class="flex items-center justify-between px-2">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fa-regular fa-comments text-pink-500"></i>
+                    방명록 목록
+                    <span id="totalCount"
+                        class="text-xs bg-pink-200 text-pink-700 px-2.5 py-1 rounded-full font-semibold">0</span>
+                </h2>
+                <div class="text-xs text-gray-500 flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    실시간 동기화 중
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading" class="glass-card rounded-3xl p-8 text-center text-pink-500 space-y-3">
+                <i class="fa-solid fa-circle-notch fa-spin text-3xl"></i>
+                <p class="text-sm font-medium">방명록을 불러오는 중입니다...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden glass-card rounded-3xl p-10 text-center text-gray-400 space-y-3">
+                <i class="fa-regular fa-heart-crack text-4xl text-pink-300"></i>
+                <p class="text-base font-medium text-gray-600">첫 번째 방명록의 주인공이 되어보세요!</p>
+            </div>
+
+            <!-- Message Cards Feed Container -->
+            <div id="messageList" class="space-y-4"></div>
+        </section>
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast"
+        class="fixed bottom-6 right-6 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 z-50">
+        <i class="fa-solid fa-circle-check text-pink-400 text-lg"></i>
+        <span id="toastMessage" class="text-sm font-medium">성공적으로 등록되었습니다!</span>
+    </div>
+
+    <!-- Firebase SDK Modules -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global environment variables provided by context or fallback mock
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'pink-guestbook-demo';
+        const firebaseConfig = typeof __firebase_config !== 'undefined'
+            ? JSON.parse(__firebase_config)
+            : {
+                // Fallback / Public demo config
+                apiKey: "AIzaSyDemoKeyOnlyForFallbackTesting",
+                authDomain: "demo-app.firebaseapp.com",
+                projectId: "demo-app",
+                storageBucket: "demo-app.appspot.com",
+                messagingSenderId: "123456789",
+                appId: "1:123456789:web:demo"
+            };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+
+        // 1. Authenticate user silently
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    const userCredential = await signInWithCustomToken(auth, __initial_auth_token);
+                    currentUser = userCredential.user;
+                } else {
+                    const userCredential = await signInAnonymously(auth);
+                    currentUser = userCredential.user;
+                }
+                listenToMessages();
+            } catch (error) {
+                console.error("Auth failed:", error);
+                // Fallback anonymous sign-in if token fails
+                try {
+                    const userCredential = await signInAnonymously(auth);
+                    currentUser = userCredential.user;
+                    listenToMessages();
+                } catch (e) {
+                    showToast("인증 초기화 실패. 페이지를 새로고침해 주세요.", true);
+                }
+            }
+        }
+
+        // Collection Reference (Strict Path Rule 1)
+        const guestbookRef = collection(db, 'artifacts', appId, 'public', 'data', 'guestbook');
+
+        // 2. Realtime Snapshot Listener
+        function listenToMessages() {
+            const loadingEl = document.getElementById('loading');
+            const emptyEl = document.getElementById('emptyState');
+            const listEl = document.getElementById('messageList');
+            const totalCountEl = document.getElementById('totalCount');
+
+            // Simple query without complex indexes (Rule 2)
+            onSnapshot(guestbookRef, (snapshot) => {
+                loadingEl.classList.add('hidden');
+
+                const docs = [];
+                snapshot.forEach(docSnap => {
+                    docs.push({ id: docSnap.id, ...docSnap.data() });
+                });
+
+                // In-memory sort by createdAt descending
+                docs.sort((a, b) => {
+                    const timeA = a.createdAt?.seconds || Date.now() / 1000;
+                    const timeB = b.createdAt?.seconds || Date.now() / 1000;
+                    return timeB - timeA;
+                });
+
+                totalCountEl.textContent = docs.length;
+
+                if (docs.length === 0) {
+                    emptyEl.classList.remove('hidden');
+                    listEl.innerHTML = '';
+                    return;
+                }
+
+                emptyEl.classList.add('hidden');
+                renderMessages(docs);
+            }, (error) => {
+                console.error("Firestore Listen Error:", error);
+                loadingEl.classList.add('hidden');
+                showToast("데이터를 동기화하는 도중 오류가 발생했습니다.", true);
+            });
+        }
+
+        // 3. Render Card Items
+        function renderMessages(messages) {
+            const listEl = document.getElementById('messageList');
+            listEl.innerHTML = '';
+
+            messages.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'glass-card rounded-2xl p-5 shadow-sm hover:shadow-md transition duration-200 border border-pink-100 flex gap-4 items-start';
+
+                // Random avatar color based on name
+                const avatarBg = getAvatarColor(item.name || 'Anonymous');
+                const initial = (item.name || 'A').charAt(0).toUpperCase();
+                const timeAgo = formatTime(item.createdAt);
+                const likes = item.likes || 0;
+
+                card.innerHTML = `
+                    <div class="w-11 h-11 rounded-full ${avatarBg} text-white font-bold flex items-center justify-center text-lg flex-shrink-0 shadow-inner">
+                        ${initial}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between mb-1">
+                            <h3 class="font-bold text-gray-800 text-sm sm:text-base truncate">${escapeHtml(item.name)}</h3>
+                            <span class="text-xs text-gray-400 font-normal flex-shrink-0">${timeAgo}</span>
+                        </div>
+                        <p class="text-gray-600 text-sm sm:text-base leading-relaxed break-words mb-3">${escapeHtml(item.message)}</p>
+                        
+                        <div class="flex items-center justify-end">
+                            <button class="heart-btn group flex items-center gap-1.5 text-xs text-pink-500 bg-pink-50 hover:bg-pink-100 px-3 py-1.5 rounded-full transition duration-150" data-id="${item.id}">
+                                <i class="fa-solid fa-heart group-hover:scale-110 transition-transform text-pink-400"></i>
+                                <span class="font-semibold text-pink-600">${likes}</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // Add like button listener
+                const likeBtn = card.querySelector('.heart-btn');
+                likeBtn.addEventListener('click', () => handleLike(item.id));
+
+                listEl.appendChild(card);
+            });
+        }
+
+        // 4. Handle Adding New Entry
+        const form = document.getElementById('guestbookForm');
+        const messageInput = document.getElementById('message');
+        const charCount = document.getElementById('charCount');
+
+        messageInput.addEventListener('input', (e) => {
+            charCount.textContent = e.target.value.length;
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) {
+                showToast("인증 대기 중입니다. 잠시 후 다시 시도해주세요.", true);
+                return;
+            }
+
+            const name = document.getElementById('name').value.trim();
+            const message = messageInput.value.trim();
+
+            if (!name || !message) return;
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-75');
+
+            try {
+                await addDoc(guestbookRef, {
+                    name: name,
+                    message: message,
+                    likes: 0,
+                    createdAt: serverTimestamp(),
+                    userId: currentUser.uid
+                });
+
+                form.reset();
+                charCount.textContent = '0';
+                showToast("방명록이 등록되었습니다! 🌸");
+            } catch (error) {
+                console.error("Add message error:", error);
+                showToast("등록 실패. 다시 시도해 주세요.", true);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-75');
+            }
+        });
+
+        // 5. Handle Like Increments
+        async function handleLike(docId) {
+            if (!currentUser) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'guestbook', docId);
+                await updateDoc(docRef, {
+                    likes: increment(1)
+                });
+            } catch (error) {
+                console.error("Like error:", error);
+            }
+        }
+
+        // Helper: Toast Notifications
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMessage');
+
+            toastMsg.textContent = msg;
+            if (isError) {
+                toast.firstElementChild.className = "fa-solid fa-circle-exclamation text-red-400 text-lg";
+            } else {
+                toast.firstElementChild.className = "fa-solid fa-circle-check text-pink-400 text-lg";
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Helper: Time Format
+        function formatTime(timestamp) {
+            if (!timestamp) return '방금 전';
+            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp.seconds * 1000);
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+
+            if (diffInSeconds < 60) return '방금 전';
+            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}분 전`;
+            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}시간 전`;
+            return `${date.getMonth() + 1}월 ${date.getDate()}일`;
+        }
+
+        // Helper: Avatar Background Palette
+        function getAvatarColor(name) {
+            const colors = [
+                'bg-gradient-to-br from-pink-400 to-rose-400',
+                'bg-gradient-to-br from-purple-400 to-pink-400',
+                'bg-gradient-to-br from-fuchsia-400 to-pink-500',
+                'bg-gradient-to-br from-rose-400 to-red-300',
+                'bg-gradient-to-br from-pink-500 to-rose-500'
+            ];
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) {
+                hash = name.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return colors[Math.abs(hash) % colors.length];
+        }
+
+        // Helper: Escape HTML string to prevent XSS
+        function escapeHtml(str) {
+            return (str || '').replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Start initialization
+        initAuth();
+    </script>
+</body>
+
+</html>
