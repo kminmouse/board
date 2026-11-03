@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>실시간 투표 웹앱</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    }
+    body {
+      background-color: #f4f7f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      width: 100%;
+      max-width: 500px;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 24px;
+    }
+    .options {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+    .vote-btn {
+      flex: 1;
+      padding: 14px;
+      border: 2px solid #4F46E5;
+      background: #ffffff;
+      color: #4F46E5;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .vote-btn:hover {
+      background: #4F46E5;
+      color: #ffffff;
+    }
+    .vote-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .results {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .result-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      font-weight: 600;
+      color: #444;
+    }
+    .bar-background {
+      width: 100%;
+      height: 20px;
+      background-color: #E5E7EB;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      background-color: #4F46E5;
+      border-radius: 10px;
+      transition: width 0.5s ease-in-out;
+    }
+    .bar-fill.optionB {
+      background-color: #10B981;
+    }
+    .total-votes {
+      text-align: right;
+      font-size: 13px;
+      color: #666;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>투표에 참여하세요</h2>
+  
+  <div class="options">
+    <button class="vote-btn" onclick="submitVote('optionA')">A안 선택</button>
+    <button class="vote-btn" onclick="submitVote('optionB')">B안 선택</button>
+  </div>
+
+  <div class="results">
+    <div class="result-item">
+      <div class="label-row">
+        <span>A안</span>
+        <span id="percent-optionA">0% (0표)</span>
+      </div>
+      <div class="bar-background">
+        <div id="bar-optionA" class="bar-fill"></div>
+      </div>
+    </div>
+
+    <div class="result-item">
+      <div class="label-row">
+        <span>B안</span>
+        <span id="percent-optionB">0% (0표)</span>
+      </div>
+      <div class="bar-background">
+        <div id="bar-optionB" class="bar-fill optionB"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="total-votes" id="total-count">총 투표수: 0표</div>
+</div>
+
+<script>
+  // GAS에서 생성한 웹 앱 URL을 넣으세요.
+  const GAS_URL = "YOUR_GAS_WEB_APP_URL";
+
+  // 페이지 로드시 현재 데이터 수신
+  window.onload = loadResults;
+
+  async function loadResults() {
+    try {
+      const response = await fetch(GAS_URL);
+      const result = await response.json();
+      if (result.status === "success") {
+        renderGraph(result.data);
+      }
+    } catch (err) {
+      console.error("데이터 로드 실패:", err);
+    }
+  }
+
+  async function submitVote(option) {
+    setButtonsDisabled(true);
+
+    try {
+      // GAS POST 요청으로 투표 전송
+      const response = await fetch(GAS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, // GAS CORS 이슈 회피용 text/plain
+        body: JSON.stringify({ option: option })
+      });
+      
+      const result = await response.json();
+      if (result.status === "success") {
+        renderGraph(result.data);
+      }
+    } catch (err) {
+      console.error("투표 전송 실패:", err);
+    } finally {
+      setButtonsDisabled(false);
+    }
+  }
+
+  function renderGraph(data) {
+    const countA = (data && data.optionA) || 0;
+    const countB = (data && data.optionB) || 0;
+    const total = countA + countB;
+
+    const percentA = total > 0 ? Math.round((countA / total) * 100) : 0;
+    const percentB = total > 0 ? Math.round((countB / total) * 100) : 0;
+
+    // A안 차트 업데이트
+    document.getElementById("bar-optionA").style.width = percentA + "%";
+    document.getElementById("percent-optionA").innerText = `${percentA}% (${countA}표)`;
+
+    // B안 차트 업데이트
+    document.getElementById("bar-optionB").style.width = percentB + "%";
+    document.getElementById("percent-optionB").innerText = `${percentB}% (${countB}표)`;
+
+    // 총 투표수
+    document.getElementById("total-count").innerText = `총 투표수: ${total}표`;
+  }
+
+  function setButtonsDisabled(disabled) {
+    const buttons = document.querySelectorAll('.vote-btn');
+    buttons.forEach(btn => btn.disabled = disabled);
+  }
+</script>
+
+</body>
+</html>
